@@ -1,5 +1,7 @@
 shops = []
-customers = []
+customers = {
+    
+}
 
 class Bicycle(object):
     def __init__(self, name, weight, cost):
@@ -17,23 +19,28 @@ class Shop(object):
         self.margin = margin
         self.profit = 0
         shops.append(name)
-    def add(self, bicycle):
+    def add(self, bicycle, amount):
         if bicycle.name in self.inventory:
-            count, cost = self.inventory[bicycle.name]
-            self.inventory[bicycle.name] = (count + 1, cost)
+            count, bicycle.retail_cost = self.inventory[bicycle.name]
+            self.inventory[bicycle.name] = (count + amount, bicycle.retail_cost)
         else:
             bicycle.retail_cost = bicycle.cost * self.margin
-            self.inventory[bicycle.name] = (1, bicycle.retail_cost)
+            self.inventory[bicycle.name] = (amount, bicycle.retail_cost)
     def sell(self, customer, bicycle):
-        _, cost = self.inventory[bicycle.name]
-        if cost <= customer.funds:
-            customer.funds = customer.funds - cost
-            self.profit = self.profit + cost
-            print(self.profit)
+        count, bicycle.retail_cost = self.inventory[bicycle.name]
+        if bicycle.retail_cost <= customer.funds:
+            customer.funds = customer.funds - bicycle.retail_cost
+            self.profit = self.profit + bicycle.retail_cost
+            if self.inventory[bicycle.name][0] > 1:
+                self.inventory[bicycle.name] = (count - 1, bicycle.retail_cost)
+            else:
+                del self.inventory[bicycle.name]
             if bicycle.name in customer.owned:
                 customer.owned[bicycle.name] = customer.owned[bicycle.name] + 1
             else:
                 customer.owned[bicycle.name] = 1
+            print("{0} has bought a {1} for ${2}, and has ${3} left".format(customer.name, bicycle.name, bicycle.retail_cost, customer.funds))
+            customers[customer.name] = customer.funds
         else:
             print("This customer does not have enough funds.")
             
@@ -46,24 +53,15 @@ class Customer(object):
         self.owned = {
         
     }
-    #customers.append(self)
+        customers[self.name] = self.funds
     
-#    def can_buy(self, shops):
-#        print(self.funds)
-#        for shop in shops:
-#            available_bikes = []
-#            for bikes in shop.price:
-#                if self.funds >= shop.price[bikes]:
-#                    available_bikes.append((shop, bikes, shop.price[bikes]))
-
-def can_buy(customers):
-    for x in customers:
-        print(x.name)
-        print('Available Funds: ' + x.funds)
-        for y in shops:
-            available_bikes = []
-            for z in y.inventory:
-                if x.funds >= z[1]:
-                    available_bikes.append((z[0],y.name))
+def can_buy(customers, shop):
+    for customer in customers.keys():
+        print(customer)
+        print('Available Funds: {0}'.format(customers[customer]))
+        available_bikes = []
+        for bicycle in shop.inventory:
+            if customers[customer] >= shop.inventory[bicycle][1]:
+                available_bikes.append((bicycle, shop.inventory[bicycle][1]))
         print(available_bikes)
         available_bikes = []
